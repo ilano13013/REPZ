@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "REPZ",
+    "slug": "repz",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "repz",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0B0F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.repz.app"
+    },
+    "android": {
+      "package": "com.repz.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0B0F"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0A0B0F",
+          "resizeMode": "contain"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
