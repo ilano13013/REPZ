@@ -1,0 +1,14 @@
+/** Barrel des composants réutilisables. */
+export { Screen } from './ui/Screen';
+export { Card } from './ui/Card';
+export { AppText } from './ui/AppText';
+export { AppButton } from './ui/AppButton';
+export { ProgressBar } from './ui/ProgressBar';
+export { StatTile } from './ui/StatTile';
+export { SegmentedControl } from './ui/SegmentedControl';
+export { XpBar } from './game/XpBar';
+export { XpGainToast } from './game/XpGainToast';
+export { LevelUpOverlay } from './game/LevelUpOverlay';
+export { MuscleBars } from './game/MuscleBars';
+export { BossCard } from './game/BossCard';
+export { LineChart } from './charts/LineChart';
