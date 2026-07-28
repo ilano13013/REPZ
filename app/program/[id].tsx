@@ -21,6 +21,7 @@ import {
   moveExercise,
   addDay,
   removeDay,
+  duplicateDay,
 } from '@/stores/programStore';
 import { getExercise, EXERCISES } from '@/data/exercises';
 import { MUSCLES } from '@/data/muscles';
@@ -107,10 +108,17 @@ export default function ProgramBuilder() {
                   style={{ color: colors.text, fontSize: 18, fontWeight: '700', flex: 1 }}
                 />
               )}
-              {!readOnly && draft.days.length > 1 ? (
-                <Pressable onPress={() => setDraft(removeDay(draft, day.id))}>
-                  <AppText tone="danger" variant="caption">Supprimer le jour</AppText>
-                </Pressable>
+              {!readOnly ? (
+                <View style={{ flexDirection: 'row', gap: spacing.md }}>
+                  <Pressable onPress={() => setDraft(duplicateDay(draft, day.id))}>
+                    <AppText tone="accent" variant="caption">Dupliquer</AppText>
+                  </Pressable>
+                  {draft.days.length > 1 ? (
+                    <Pressable onPress={() => setDraft(removeDay(draft, day.id))}>
+                      <AppText tone="danger" variant="caption">Supprimer</AppText>
+                    </Pressable>
+                  ) : null}
+                </View>
               ) : null}
             </View>
 

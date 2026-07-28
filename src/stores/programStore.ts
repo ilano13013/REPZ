@@ -5,12 +5,21 @@
  */
 
 import { create } from 'zustand';
-import type { Program, ProgramDay, ProgramExerciseTemplate } from '@/models';
+import type { Program } from '@/models';
 import { PROGRAMS, PROGRAMS_BY_ID } from '@/data/programs';
 import { programRepo } from '@/db/repositories';
-import { getExercise } from '@/data/exercises';
 import { uid } from '@/utils/id';
 import { useProfileStore } from './profileStore';
+
+// Les transformations d'édition sont des fonctions pures (moteur testable).
+export {
+  addExerciseToDay,
+  removeExerciseFromDay,
+  moveExercise,
+  addDay,
+  removeDay,
+  duplicateDay,
+} from '@/engines/programEditor';
 
 interface ProgramState {
   custom: Program[];
@@ -97,69 +106,3 @@ export const useProgramStore = create<ProgramState>((set, get) => ({
     }
   },
 }));
-
-// -------------------- Helpers d'édition immuables (jour / exercices) ----------
-
-export function addExerciseToDay(
-  program: Program,
-  dayId: string,
-  exerciseId: string,
-): Program {
-  const ex = getExercise(exerciseId);
-  const template: ProgramExerciseTemplate = {
-    exerciseId,
-    order: 0,
-    sets: ex?.recommended.sets ?? 3,
-    targetReps: ex?.recommended.reps ?? '8-12',
-    restSeconds: ex?.recommended.restSeconds ?? 90,
-  };
-  return {
-    ...program,
-    days: program.days.map((d) =>
-      d.id === dayId
-        ? { ...d, exercises: [...d.exercises, { ...template, order: d.exercises.length }] }
-        : d,
-    ),
-  };
-}
-
-export function removeExerciseFromDay(program: Program, dayId: string, index: number): Program {
-  return {
-    ...program,
-    days: program.days.map((d) =>
-      d.id === dayId
-        ? { ...d, exercises: d.exercises.filter((_, i) => i !== index).map((e, i) => ({ ...e, order: i })) }
-        : d,
-    ),
-  };
-}
-
-/** Déplace un exercice vers le haut (-1) ou le bas (+1) dans la liste du jour. */
-export function moveExercise(program: Program, dayId: string, index: number, dir: -1 | 1): Program {
-  return {
-    ...program,
-    days: program.days.map((d) => {
-      if (d.id !== dayId) return d;
-      const target = index + dir;
-      if (target < 0 || target >= d.exercises.length) return d;
-      const list = [...d.exercises];
-      [list[index], list[target]] = [list[target], list[index]];
-      return { ...d, exercises: list.map((e, i) => ({ ...e, order: i })) };
-    }),
-  };
-}
-
-export function addDay(program: Program): Program {
-  const day: ProgramDay = {
-    id: uid('day'),
-    name: `Jour ${program.days.length + 1}`,
-    order: program.days.length,
-    exercises: [],
-  };
-  return { ...program, days: [...program.days, day] };
-}
-
-export function removeDay(program: Program, dayId: string): Program {
-  const days = program.days.filter((d) => d.id !== dayId).map((d, i) => ({ ...d, order: i }));
-  return { ...program, days: days.length ? days : program.days };
-}

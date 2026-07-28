@@ -141,7 +141,12 @@ export default function Profile() {
 
         {/* Badges */}
         <Card>
-          <AppText variant="h3" style={{ marginBottom: spacing.md }}>Badges ({badges.length}/{BADGES.length})</AppText>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
+            <AppText variant="h3">Badges ({badges.length}/{BADGES.length})</AppText>
+            <Pressable onPress={() => router.push('/profile/badges')}>
+              <AppText tone="accent" variant="label">Tout voir</AppText>
+            </Pressable>
+          </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
             {BADGES.map((b) => {
               const owned = badges.some((ub) => ub.badgeId === b.id);
