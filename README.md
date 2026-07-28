@@ -30,6 +30,30 @@ npm test           # tests unitaires des moteurs
 npm run typecheck  # vérification TypeScript
 ```
 
+### Lancer l'app sur ton téléphone
+
+1. Installe **Expo Go** ([iOS](https://apps.apple.com/app/expo-go/id982107779) /
+   [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
+2. Dans le dossier du projet : `npm install` puis `npm start`.
+3. Scanne le QR code affiché dans le terminal (appareil photo sur iOS, Expo Go
+   sur Android). Le téléphone et l'ordinateur doivent être sur le même réseau.
+
+> Les notifications locales ne fonctionnent pas dans Expo Go sur Android
+> (SDK 53+) : utilise un *development build* (`npx expo run:android`) pour les
+> tester. Tout le reste fonctionne dans Expo Go.
+
+### Fonctionnalités principales
+
+| Écran | Contenu |
+| --- | --- |
+| Onboarding | Profil, objectif, niveau, jours, matériel → programme recommandé |
+| Accueil | Niveau, titre, barre d'XP, série, prochaine séance, quêtes, records, muscles |
+| Entraînement | Programmes prédéfinis & personnalisés, constructeur, lancement de séance |
+| Séance | Check-in de récupération, saisie rapide, chrono, +XP animé, records, note |
+| Progression | Graphiques volume/poids, records, historique cliquable, caractéristiques |
+| Défis | Quêtes quotidiennes/hebdo, boss hebdomadaire, ligue |
+| Profil | Fiche de personnage (radar), badges, réglages, export/import, démo |
+
 ## Architecture
 
 ```
@@ -49,6 +73,7 @@ src/
     recoveryEngine      check-in & avertissements de sécurité
     leagueEngine        score de ligue (progression + assiduité) & divisions
     workoutEngine       agrégations, boss hebdomadaire, stats de personnage
+    programEditor       édition immuable de programmes (jours, exercices)
   db/                   schéma, migrations, service SQLite, dépôts, seed démo
   stores/               Zustand : thème, profil, session, jeu
   components/           UI réutilisable (ui/, game/, charts/)
@@ -76,9 +101,9 @@ Tous les paramètres sont centralisés dans `src/constants/xpConfig.ts` et
 
 ## Tests
 
-50 tests unitaires couvrent l'XP, les plafonds, le 1RM, la détection de
-records, les niveaux (montées multiples), la progression musculaire, les quêtes
-et les valeurs incohérentes.
+61 tests unitaires couvrent l'XP, les plafonds, le 1RM, la détection de
+records, les niveaux (montées multiples), la progression musculaire, les quêtes,
+les valeurs incohérentes et l'édition de programmes.
 
 ```bash
 npm test
