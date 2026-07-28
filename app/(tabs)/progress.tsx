@@ -6,9 +6,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Card } from '@/components/ui/Card';
 import { AppText } from '@/components/ui/AppText';
+import { AppButton } from '@/components/ui/AppButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { LineChart, type LinePoint } from '@/components/charts/LineChart';
@@ -33,6 +35,7 @@ const PERIODS: { key: Period; label: string; days: number }[] = [
 ];
 
 export default function Progress() {
+  const router = useRouter();
   const { colors, spacing } = useTheme();
   const profile = useProfileStore((s) => s.profile);
   const muscles = useProfileStore((s) => s.muscles);
@@ -84,7 +87,10 @@ export default function Progress() {
   return (
     <Screen>
       <View style={{ paddingTop: spacing.lg, gap: spacing.lg }}>
-        <AppText variant="h1">Progression</AppText>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <AppText variant="h1">Progression</AppText>
+          <AppButton label="📏 Suivi corporel" variant="secondary" onPress={() => router.push('/tracking/measurements')} />
+        </View>
 
         <SegmentedControl
           scroll

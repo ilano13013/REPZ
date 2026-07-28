@@ -15,7 +15,7 @@ import type {
   WorkoutExercise,
 } from '@/models';
 import { getExercise } from '@/data/exercises';
-import { PROGRAMS_BY_ID } from '@/data/programs';
+import { useProgramStore } from './programStore';
 import { computeSetXp, type XpContext } from '@/engines/xpEngine';
 import { detectSetRecords } from '@/engines/personalRecordEngine';
 import { workoutVolume, workoutMuscles } from '@/engines/workoutEngine';
@@ -93,7 +93,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   startFromProgramDay: async (programId, dayId) => {
     const profile = useProfileStore.getState().profile;
     if (!profile) return;
-    const program = PROGRAMS_BY_ID[programId];
+    const program = useProgramStore.getState().getById(programId);
     const day = program?.days.find((d) => d.id === dayId);
     const workoutId = uid('w');
     const exercises: WorkoutExercise[] =

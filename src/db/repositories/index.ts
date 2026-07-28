@@ -3,3 +3,4 @@ export * as profileRepo from './profileRepo';
 export * as workoutRepo from './workoutRepo';
 export * as gameRepo from './gameRepo';
 export * as trackingRepo from './trackingRepo';
+export * as programRepo from './programRepo';

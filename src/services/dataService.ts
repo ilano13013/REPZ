@@ -12,6 +12,7 @@ import { getDb, resetDatabase } from '@/db/database';
 import { seedDemo } from '@/db/demo';
 import { useProfileStore } from '@/stores/profileStore';
 import { useGameStore } from '@/stores/gameStore';
+import { useProgramStore } from '@/stores/programStore';
 
 const EXPORT_TABLES = [
   'users', 'settings', 'custom_programs', 'workouts', 'workout_exercises', 'sets',
@@ -92,6 +93,7 @@ export async function resetAll(): Promise<void> {
 async function reloadStores(): Promise<void> {
   await useProfileStore.getState().load();
   if (useProfileStore.getState().profile) {
+    await useProgramStore.getState().load();
     await useGameStore.getState().load();
   }
 }

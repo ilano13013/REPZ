@@ -13,6 +13,7 @@ import { initDatabase } from '@/db/database';
 import { useThemeStore } from '@/stores/themeStore';
 import { useProfileStore } from '@/stores/profileStore';
 import { useGameStore } from '@/stores/gameStore';
+import { useProgramStore } from '@/stores/programStore';
 import { LevelUpOverlay } from '@/components/game/LevelUpOverlay';
 
 export default function RootLayout() {
@@ -26,6 +27,7 @@ export default function RootLayout() {
       await useThemeStore.getState().hydrate();
       await useProfileStore.getState().load();
       if (useProfileStore.getState().profile) {
+        await useProgramStore.getState().load();
         await useGameStore.getState().load();
       }
       setReady(true);

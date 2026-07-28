@@ -21,7 +21,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { onboardingSchema } from '@/validation/onboarding';
 import { useProfileStore } from '@/stores/profileStore';
 import { useGameStore } from '@/stores/gameStore';
-import { useThemeStore } from '@/stores/themeStore';
+import { useProgramStore } from '@/stores/programStore';
 import { recommendProgram } from '@/data/programs';
 import { uid } from '@/utils/id';
 import type {
@@ -154,7 +154,7 @@ export default function Onboarding() {
     };
 
     await useProfileStore.getState().createProfile(profile);
-    useThemeStore.getState().setTheme(profile.units === 'kg' ? 'dark' : 'dark');
+    await useProgramStore.getState().load();
     await useGameStore.getState().load();
     router.replace('/(tabs)');
   };
