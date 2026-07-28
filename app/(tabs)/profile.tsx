@@ -13,6 +13,7 @@ import { AppText } from '@/components/ui/AppText';
 import { AppButton } from '@/components/ui/AppButton';
 import { StatTile } from '@/components/ui/StatTile';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { RadarChart } from '@/components/charts/RadarChart';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemeStore } from '@/stores/themeStore';
 import { useProfileStore, selectLevelState } from '@/stores/profileStore';
@@ -107,7 +108,13 @@ export default function Profile() {
         {stats ? (
           <Card>
             <AppText variant="h3" style={{ marginBottom: spacing.md }}>Fiche de personnage</AppText>
-            <View style={{ gap: spacing.md }}>
+            <RadarChart
+              axes={(Object.keys(STAT_LABEL) as CharacterStatKey[]).map((k) => ({
+                label: STAT_LABEL[k],
+                value: stats[k],
+              }))}
+            />
+            <View style={{ gap: spacing.md, marginTop: spacing.md }}>
               {(Object.keys(STAT_LABEL) as CharacterStatKey[]).map((k) => (
                 <View key={k} style={{ gap: 4 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

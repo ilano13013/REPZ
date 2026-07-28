@@ -12,3 +12,4 @@ export { LevelUpOverlay } from './game/LevelUpOverlay';
 export { MuscleBars } from './game/MuscleBars';
 export { BossCard } from './game/BossCard';
 export { LineChart } from './charts/LineChart';
+export { RadarChart } from './charts/RadarChart';
