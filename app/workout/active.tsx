@@ -21,11 +21,13 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useProfileStore } from '@/stores/profileStore';
 import { getExercise } from '@/data/exercises';
-import { trackingRepo } from '@/db/repositories';
+import { trackingRepo, workoutRepo } from '@/db/repositories';
 import { estimateSetXp } from '@/engines/xpEngine';
-import { safetyWarnings } from '@/engines/recoveryEngine';
+import { safetyWarnings, type SafetySignals } from '@/engines/recoveryEngine';
+import { workoutMuscles } from '@/engines/workoutEngine';
 import { uid } from '@/utils/id';
-import type { SetEntry, WorkoutExercise } from '@/models';
+import { daysBetween } from '@/utils/date';
+import type { MuscleGroup, SetEntry, Workout, WorkoutExercise } from '@/models';
 
 export default function ActiveWorkout() {
   const router = useRouter();
@@ -37,12 +39,19 @@ export default function ActiveWorkout() {
   const [checkinDone, setCheckinDone] = useState(false);
   const [toast, setToast] = useState<{ xp: number; record: boolean; key: number } | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [recent, setRecent] = useState<Workout[]>([]);
+  const [note, setNoteState] = useState('');
 
   // Horloge pour le chrono de repos.
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
   }, []);
+
+  // Historique récent pour les avertissements de sécurité.
+  useEffect(() => {
+    if (profile) workoutRepo.listWorkouts(profile.id, 8).then(setRecent);
+  }, [profile]);
 
   const restLeft = restEndsAt ? Math.max(0, Math.ceil((restEndsAt - now) / 1000)) : 0;
   useEffect(() => {
@@ -71,7 +80,7 @@ export default function ActiveWorkout() {
               await trackingRepo.addCheckin({
                 id: uid('chk'), userId: profile.id, date: Date.now(), ...values,
               });
-              const warnings = [...assessment.warnings, ...safetyWarnings({})];
+              const warnings = [...assessment.warnings, ...safetyWarnings(computeSignals(recent, workout))];
               if (warnings.length > 0) {
                 Alert.alert('Recommandation', `${assessment.message}\n\n${warnings.join('\n')}`);
               }
@@ -158,6 +167,19 @@ export default function ActiveWorkout() {
           />
         ) : null}
 
+        {/* Note de séance */}
+        <Card style={{ marginTop: spacing.lg }}>
+          <AppText variant="caption" tone="muted">NOTE DE SÉANCE</AppText>
+          <TextInput
+            value={note}
+            onChangeText={(t) => { setNoteState(t); useSessionStore.getState().setNote(t); }}
+            placeholder="Sensations, douleurs, remarques…"
+            placeholderTextColor={colors.textFaint}
+            multiline
+            style={{ color: colors.text, fontSize: 15, marginTop: spacing.xs, minHeight: 44 }}
+          />
+        </Card>
+
         <AppButton label="✓ Terminer la séance" fullWidth style={{ marginTop: spacing.xl }} onPress={finish} />
       </ScrollView>
 
@@ -166,6 +188,43 @@ export default function ActiveWorkout() {
       ) : null}
     </SafeAreaView>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Signaux de sécurité dérivés de l'historique récent
+// ---------------------------------------------------------------------------
+
+/**
+ * Calcule des signaux objectifs pour `safetyWarnings` :
+ * - tendance de performance (volume) sur les dernières séances,
+ * - sollicitation du même muscle sans repos (muscle prévu déjà travaillé la veille).
+ */
+function computeSignals(recent: Workout[], current: Workout): SafetySignals {
+  const signals: SafetySignals = {};
+  const sorted = [...recent].sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+
+  // Tendance de performance : moyenne des 2 dernières vs 2 précédentes.
+  if (sorted.length >= 4) {
+    const avg = (arr: Workout[]) => arr.reduce((s, w) => s + w.totalVolumeKg, 0) / (arr.length || 1);
+    const last2 = avg(sorted.slice(0, 2));
+    const prev2 = avg(sorted.slice(2, 4));
+    if (prev2 > 0) signals.performanceTrend = (last2 - prev2) / prev2;
+  }
+
+  // Muscle prévu déjà travaillé très récemment (< 2 jours).
+  const last = sorted[0];
+  if (last?.completedAt && daysBetween(last.completedAt, Date.now()) <= 1) {
+    const plannedMuscles = new Set<MuscleGroup>(
+      current.exercises
+        .map((we) => getExercise(we.exerciseId)?.primaryMuscle)
+        .filter((m): m is MuscleGroup => !!m),
+    );
+    const lastMuscles = workoutMuscles(last, getExercise);
+    const overlap = lastMuscles.some((m) => plannedMuscles.has(m));
+    if (overlap) signals.sameMuscleConsecutiveDays = 3;
+  }
+
+  return signals;
 }
 
 // ---------------------------------------------------------------------------
