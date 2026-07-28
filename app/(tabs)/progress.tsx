@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Card } from '@/components/ui/Card';
@@ -167,12 +167,16 @@ export default function Progress() {
               <AppText tone="muted">Aucune séance sur cette période.</AppText>
             ) : (
               inRange.slice(0, 12).map((w) => (
-                <View key={w.id} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Pressable
+                  key={w.id}
+                  onPress={() => router.push({ pathname: '/workout/[id]', params: { id: w.id } })}
+                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                   <AppText variant="label">{w.name}</AppText>
                   <AppText variant="caption" tone="muted">
-                    {formatDate(w.completedAt ?? w.startedAt)} · {formatVolume(w.totalVolumeKg, profile.units)} · +{w.totalXp} XP
+                    {formatDate(w.completedAt ?? w.startedAt)} · {formatVolume(w.totalVolumeKg, profile.units)} · +{w.totalXp} XP ›
                   </AppText>
-                </View>
+                </Pressable>
               ))
             )}
           </View>

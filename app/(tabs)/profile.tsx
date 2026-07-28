@@ -24,6 +24,7 @@ import { DIVISION_LABEL } from '@/engines/leagueEngine';
 import { STAT_LABEL, GOAL_LABEL } from '@/utils/labels';
 import { formatVolume } from '@/utils/units';
 import { exportData, importData, loadDemo, resetAll } from '@/services/dataService';
+import { scheduleWorkoutReminders, cancelAllReminders } from '@/services/notificationService';
 import type { CharacterStatKey, Workout } from '@/models';
 
 export default function Profile() {
@@ -62,6 +63,16 @@ export default function Profile() {
         },
       },
     ]);
+  };
+
+  const onToggleNotifications = async (v: boolean) => {
+    await updateSettings({ notificationsEnabled: v });
+    try {
+      if (v) await scheduleWorkoutReminders(profile);
+      else await cancelAllReminders();
+    } catch {
+      Alert.alert('Notifications', 'Impossible de configurer les rappels sur cet appareil.');
+    }
   };
 
   const runDemo = () => {
@@ -154,7 +165,7 @@ export default function Profile() {
             <Row label="Notifications">
               <Switch
                 value={settings?.notificationsEnabled ?? true}
-                onValueChange={(v) => updateSettings({ notificationsEnabled: v })}
+                onValueChange={onToggleNotifications}
                 trackColor={{ true: colors.accent }}
               />
             </Row>
