@@ -5,22 +5,35 @@
  * et expose une instance partagée. Toutes les opérations sont asynchrones.
  */
 
-import * as SQLite from 'expo-sqlite';
+import type * as SQLiteTypes from 'expo-sqlite';
 import { DB_NAME } from '@/constants/config';
 import { MIGRATIONS, LATEST_VERSION } from './schema';
 
-let db: SQLite.SQLiteDatabase | null = null;
+let db: SQLiteTypes.SQLiteDatabase | null = null;
+
+/**
+ * Chargement différé d'expo-sqlite.
+ *
+ * Sur le web, le module natif n'est disponible qu'une fois le moteur
+ * WebAssembly résolu : un import statique ferait échouer toute l'application au
+ * chargement. En important à la demande, l'erreur reste rattrapable par
+ * l'appelant.
+ */
+async function loadSQLite(): Promise<typeof SQLiteTypes> {
+  return import('expo-sqlite');
+}
 
 /** Ouvre la base et applique les migrations (idempotent). */
-export async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
+export async function initDatabase(): Promise<SQLiteTypes.SQLiteDatabase> {
   if (db) return db;
+  const SQLite = await loadSQLite();
   db = await SQLite.openDatabaseAsync(DB_NAME);
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   await runMigrations(db);
   return db;
 }
 
-async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
+async function runMigrations(database: SQLiteTypes.SQLiteDatabase): Promise<void> {
   const row = await database.getFirstAsync<{ user_version: number }>('PRAGMA user_version;');
   const current = row?.user_version ?? 0;
   for (const migration of MIGRATIONS) {
@@ -37,7 +50,7 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
 }
 
 /** Retourne l'instance ouverte (lève une erreur si non initialisée). */
-export function getDb(): SQLite.SQLiteDatabase {
+export function getDb(): SQLiteTypes.SQLiteDatabase {
   if (!db) {
     throw new Error('Base de données non initialisée. Appelez initDatabase() d\'abord.');
   }

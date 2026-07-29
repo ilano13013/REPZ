@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +18,7 @@ import { LevelUpOverlay } from '@/components/game/LevelUpOverlay';
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const colors = useThemeStore((s) => s.colors);
   const themeName = useThemeStore((s) => s.name);
 
@@ -31,11 +32,29 @@ export default function RootLayout() {
         await useGameStore.getState().load();
       }
       setReady(true);
-    })().catch((e) => {
+    })().catch((e: unknown) => {
       console.error('Erreur d\'initialisation', e);
+      setInitError(e instanceof Error ? e.message : String(e));
       setReady(true);
     });
   }, []);
+
+  if (initError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: 8 }}>
+          Stockage local indisponible
+        </Text>
+        <Text style={{ color: colors.textMuted, textAlign: 'center', lineHeight: 20 }}>
+          REPZ enregistre tes données avec SQLite, qui nécessite un appareil mobile
+          (Expo Go) ou un navigateur compatible WebAssembly.
+        </Text>
+        <Text style={{ color: colors.textFaint, marginTop: 16, fontSize: 12, textAlign: 'center' }}>
+          {initError}
+        </Text>
+      </View>
+    );
+  }
 
   if (!ready) {
     return (
