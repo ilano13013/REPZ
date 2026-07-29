@@ -30,6 +30,23 @@ npm test           # tests unitaires des moteurs
 npm run typecheck  # vérification TypeScript
 ```
 
+### Sans droits administrateur : tout dans le navigateur
+
+Si tu ne peux rien installer sur ton poste, utilise **GitHub Codespaces**
+(machine de dev dans le navigateur, Node.js déjà installé — gratuit jusqu'à
+60 h/mois) :
+
+1. Ouvre le dépôt sur GitHub → bouton vert **Code** → onglet **Codespaces** →
+   **Create codespace**.
+2. Attends l'installation automatique (`npm install` se lance tout seul).
+3. Dans le terminal du Codespace :
+   - `npm run web` → l'app s'ouvre dans un onglet du navigateur ;
+   - ou `npm run tunnel` → affiche un **QR code** scannable avec Expo Go, même
+     si ton téléphone n'est pas sur le même réseau.
+
+Le projet contient une configuration `.devcontainer` : les ports Expo sont
+déjà ouverts et les extensions utiles préinstallées.
+
 ### Lancer l'app sur ton téléphone
 
 1. Installe **Expo Go** ([iOS](https://apps.apple.com/app/expo-go/id982107779) /
