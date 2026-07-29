@@ -1,48 +1,54 @@
 /**
- * Service de base de données SQLite (expo-sqlite).
+ * Service de base de données.
  *
- * Ouvre la base, exécute les migrations en attente selon `PRAGMA user_version`
- * et expose une instance partagée. Toutes les opérations sont asynchrones.
+ * Sélectionne l'implémentation selon la plateforme :
+ *   - mobile  : `expo-sqlite` (module natif) ;
+ *   - web     : `sql.js` via `webDatabase.ts` (SQLite compilé en JavaScript).
+ *
+ * Les deux respectent le contrat `AppDatabase`, si bien que les dépôts, les
+ * stores et les écrans sont strictement identiques sur toutes les plateformes.
+ *
+ * Le choix se fait par IMPORT DYNAMIQUE : `expo-sqlite` n'est donc jamais
+ * évalué dans le navigateur, où son module natif est absent.
+ *
+ * Les migrations sont communes et versionnées via `PRAGMA user_version`.
  */
 
-import type * as SQLiteTypes from 'expo-sqlite';
+import { Platform } from 'react-native';
 import { DB_NAME } from '@/constants/config';
 import { MIGRATIONS, LATEST_VERSION } from './schema';
+import type { AppDatabase } from './types';
 
-let db: SQLiteTypes.SQLiteDatabase | null = null;
+let db: AppDatabase | null = null;
 
-/**
- * Chargement différé d'expo-sqlite.
- *
- * Sur le web, le module natif n'est disponible qu'une fois le moteur
- * WebAssembly résolu : un import statique ferait échouer toute l'application au
- * chargement. En important à la demande, l'erreur reste rattrapable par
- * l'appelant.
- */
-async function loadSQLite(): Promise<typeof SQLiteTypes> {
-  return import('expo-sqlite');
-}
-
-/** Ouvre la base et applique les migrations (idempotent). */
-export async function initDatabase(): Promise<SQLiteTypes.SQLiteDatabase> {
+/** Ouvre la base et applique les migrations en attente (idempotent). */
+export async function initDatabase(): Promise<AppDatabase> {
   if (db) return db;
-  const SQLite = await loadSQLite();
-  db = await SQLite.openDatabaseAsync(DB_NAME);
-  await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+
+  if (Platform.OS === 'web') {
+    const { openWebDatabase } = await import('./webDatabase');
+    db = await openWebDatabase();
+  } else {
+    const SQLite = await import('expo-sqlite');
+    const native = await SQLite.openDatabaseAsync(DB_NAME);
+    await native.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+    db = native as unknown as AppDatabase;
+  }
+
   await runMigrations(db);
   return db;
 }
 
-async function runMigrations(database: SQLiteTypes.SQLiteDatabase): Promise<void> {
+async function runMigrations(database: AppDatabase): Promise<void> {
   const row = await database.getFirstAsync<{ user_version: number }>('PRAGMA user_version;');
   const current = row?.user_version ?? 0;
+
   for (const migration of MIGRATIONS) {
     if (migration.version > current) {
-      await database.withTransactionAsync(async () => {
-        await database.execAsync(migration.up);
-      });
+      await database.execAsync(migration.up);
     }
   }
+
   if (LATEST_VERSION > current) {
     // PRAGMA n'accepte pas de paramètre lié : on injecte la valeur validée.
     await database.execAsync(`PRAGMA user_version = ${LATEST_VERSION};`);
@@ -50,7 +56,7 @@ async function runMigrations(database: SQLiteTypes.SQLiteDatabase): Promise<void
 }
 
 /** Retourne l'instance ouverte (lève une erreur si non initialisée). */
-export function getDb(): SQLiteTypes.SQLiteDatabase {
+export function getDb(): AppDatabase {
   if (!db) {
     throw new Error('Base de données non initialisée. Appelez initDatabase() d\'abord.');
   }
@@ -72,3 +78,5 @@ export async function resetDatabase(): Promise<void> {
     }
   });
 }
+
+export type { AppDatabase };
