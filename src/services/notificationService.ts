@@ -11,15 +11,19 @@ import { Platform } from 'react-native';
 import type { UserProfile, Weekday } from '@/models';
 
 // Affiche les notifications même app au premier plan.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Sur le web, les notifications locales planifiées ne sont pas prises en
+// charge : on évite d'installer le gestionnaire pour ne pas polluer la console.
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 /** Correspondance jour → indice de calendrier Expo (1 = dimanche … 7 = samedi). */
 const WEEKDAY_TO_CALENDAR: Record<Weekday, number> = {
